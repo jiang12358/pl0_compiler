@@ -4,9 +4,12 @@
 
 namespace compiler {
 class Grammar {
+ public:
   Grammar(){};
 
   void Init(std::string filename);
+
+  void program();
 
   void block();
   void const_declare();
@@ -19,6 +22,10 @@ class Grammar {
   void function_define();
 
   void parameter_handle();
+
+  void format_parameter();
+
+  void one_parameter();
 
   void array_declare();
 
@@ -40,6 +47,6 @@ class Grammar {
   void item();
   void factor();
 };
-} // namespace compiler
+}  // namespace compiler
 
 #endif

@@ -1,9 +1,17 @@
 #include "grammar.h"
 #include <iostream>
+#include "Lex.h"
 
 namespace compiler {
 extern void getsym();
 extern void error();
+
+void Grammar::program() {
+  block();
+  if (sym == kDot) {
+    std::cout << "This is a program" << std::endl;
+  }
+}
 
 void Grammar::block() {
   getsym();
@@ -28,17 +36,19 @@ void Grammar::block() {
 
   while (sym == kFunction || sym == kProcedure) {
     if (sym == kFunction) {
+      getsym();
       function_declare();
     }
 
     if (sym == kProcedure) {
+      getsym();
       procedure_declare();
     }
   }
 
   if (sym == kBegin) {
     getsym();
-    statement();
+    multistatement();
   }
 
   std::cout << "this is a block" << std::endl;
@@ -109,69 +119,153 @@ void Grammar::array_declare() {
   if (sym == kLSquareBracket) {
     getsym();
     if (sym == kNumber) {
+      getsym();
+      if (sym == kRSquareBracket) {
+        getsym();
+        if (sym == kOf) {
+          getsym();
+          if (sym == kInteger || sym == kReal || sym == kChar) {
+            getsym();
+            std::cout << "This is an array defination";
+          }
+        }
+      }
     }
   }
 }
 
 void Grammar::function_declare() {
-  std::cout << "This is a function declaration" << std::endl;
-}
-
-void Grammar::procedure_declare() {
-  std::cout << "This is a procedure declaration" << std::endl;
-}
-
-void Grammar::statement() {
-  switch (sym) {
-  case kBegin: {
-    getsym();
-    multistatement();
-    break;
-  }
-  case kIf: {
-    getsym();
-    ifstatement();
-    break;
-  }
-  case kFor: {
-    getsym();
-    forstatement();
-    break;
-  }
-  case kRepeat: {
-    getsym();
-    repeatstatement();
-    break;
-  }
-  case kWrite: {
-    getsym();
-    writestatement();
-    break;
-  }
-  case kRead: {
-    getsym();
-    readstatement();
-    break;
-  }
-  case kIdent: {
+  if (sym == kIdent) {
     getsym();
     if (sym == kLBracket) {
       getsym();
       if (sym != kRBracket) {
-        getsym();
-        parameter_handle();
+        format_parameter();
       }
-      if (sym != kRBracket) {
-        error();
-      } else {
+      if (sym == kRBracket) {
         getsym();
-        std::cout << "This is a procedure call" << std::endl;
+        if (sym == kColon) {
+          getsym();
+          if (sym == kInteger || sym == kChar || sym == kReal) {
+            getsym();
+            if (sym == kSemiColon) {
+              block();
+            }
+          }
+        }
       }
-    } else {
-      becomestatement();
     }
-    break;
   }
+  std::cout << "This is a function declaration" << std::endl;
+}
+
+void Grammar::procedure_declare() {
+  if (sym == kIdent) {
+    getsym();
+    if (sym == kLBracket) {
+      getsym();
+      if (sym != kRBracket) {
+        format_parameter();
+      }
+      if (sym == kRBracket) {
+        getsym();
+        if (sym == kSemiColon) {
+          getsym();
+          block();
+        }
+      }
+    }
+  }
+  std::cout << "This is a procedure declaration" << std::endl;
+}
+
+void Grammar::format_parameter() {
+  one_parameter();
+  getsym();
+  while (sym == kSemiColon) {
+    getsym();
+    one_parameter();
+  }
+  std::cout << "This is a format parameter" << std::endl;
+}
+
+void Grammar::one_parameter() {
+  if (sym == kVar) {
+    getsym();
+  }
+  if (sym == kIdent) {
+    getsym();
+    while (sym == kComma) {
+      getsym();
+      if (sym == kIdent) {
+        getsym();
+      } else {
+        error();
+      }
+    }
+    if (sym == kColon) {
+      getsym();
+      if (sym == kInteger || sym == kReal || sym == kChar) {
+        getsym();
+        std::cout << "This is a parameter" << std::endl;
+      }
+    }
+  }
+}
+
+void Grammar::statement() {
+  switch (sym) {
+    case kBegin: {
+      getsym();
+      multistatement();
+      break;
+    }
+    case kIf: {
+      getsym();
+      ifstatement();
+      break;
+    }
+    case kFor: {
+      getsym();
+      forstatement();
+      break;
+    }
+    case kRepeat: {
+      getsym();
+      repeatstatement();
+      break;
+    }
+    case kWrite: {
+      getsym();
+      writestatement();
+      break;
+    }
+    case kRead: {
+      getsym();
+      readstatement();
+      break;
+    }
+    case kIdent: {
+      getsym();
+      if (sym == kLBracket) {
+        getsym();
+        if (sym != kRBracket) {
+          getsym();
+          parameter_handle();
+        }
+        if (sym != kRBracket) {
+          error();
+        } else {
+          getsym();
+          std::cout << "This is a procedure call" << std::endl;
+        }
+      } else {
+        becomestatement();
+      }
+      break;
+    }
+    default:
+      error();
   }
   std::cout << "this is a statement" << std::endl;
 }
@@ -382,7 +476,24 @@ void Grammar::parameter_handle() {
       expression();
     }
   }
-
-  std::cout << "This is a parameter expression"
+  std::cout << "This is a parameter expression" << std::endl;
 }
-} // namespace compiler
+
+void Grammar::condition() {
+  expression();
+  if (sym == kEqual || sym == kLess || sym == kLessEqual || sym == kNotEqual ||
+      sym == kGreater || sym == kGreaterEqual) {
+    getsym();
+    expression();
+    std::cout << "This a condition" << std::endl;
+  }
+}
+
+}  // namespace compiler
+
+int main(int argc, char *argv[]) {
+  compiler::Lex lex;
+  compiler::Grammar grammar;
+  lex.init(std::string(argv[1]));
+  grammar.program();
+}

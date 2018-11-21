@@ -1,5 +1,6 @@
 #ifndef GLOBAL
 #define GLOBAL
+#include <iostream>
 #include <map>
 #include <string>
 #define NMAX 10
@@ -57,54 +58,54 @@ enum SymType {
   kRealNum = 48
 };
 
-std::map<SymType, std::string> SymbolDict{
-    {kNull, "NULL"},
-    {kNumber, "NUMBER"},
-    {kBecome, "BECOME"},
-    {kLessEqual, "LessEqual"},
-    {kNotEqual, "NotEqual"},
-    {kLess, "Less"},
-    {kGreaterEqual, "GreaterEqual"},
-    {kGreater, "Greater"},
-    {kComma, "Comma"},
-    {kIdent, "Iden"},
-    {kSemiColon, "SemiColon"},
-    {kVar, "Var"},
-    {kBegin, "Begin"},
-    {kEnd, "End"},
-    {kPlus, "Plus"},
-    {kMinus, "Minus"},
-    {kConst, "Const"},
-    {kRead, "Read"},
-    {kRepeat, "Repeat"},
-    {kTo, "to"},
-    {kIf, "If"},
-    {kThen, "Then"},
-    {kDo, "Do"},
-    {kProcedure, "Procedure"},
-    {kMulti, "Multi"},
-    {kDevide, "Devide"},
-    {kLBracket, "LBracket"},
-    {kRBracket, "RBracket"},
-    {kEqual, "Equal"},
-    {kElse, "Else"},
-    {kWrite, "Write"},
-    {kDot, "Dot"},
-    {kColon, "Colon"},
-    {kSingleQuote, "SingleQuote"},
-    {kDoubleQuote, "DoubleQuote"},
-    {kFunction, "Function"},
-    {kUntil, "Until"},
-    {kDownto, "Downto"},
-    {kArray, "Array"},
-    {kOf, "Of"},
-    {kInteger, "Integer"},
-    {kChar, "Char"},
-    {kReal, "Real"},
-    {kFor, "For"},
-    {kString, "string"},
-    {kCharacter, "character"} {kLSquareBracket, "LSquareBracket"},
-    {kRSquareBracket, "RSquareBracket"}};
+std::map<SymType, std::string> SymbolDict{{kNull, "NULL"},
+                                          {kNumber, "NUMBER"},
+                                          {kBecome, "BECOME"},
+                                          {kLessEqual, "LessEqual"},
+                                          {kNotEqual, "NotEqual"},
+                                          {kLess, "Less"},
+                                          {kGreaterEqual, "GreaterEqual"},
+                                          {kGreater, "Greater"},
+                                          {kComma, "Comma"},
+                                          {kIdent, "Iden"},
+                                          {kSemiColon, "SemiColon"},
+                                          {kVar, "Var"},
+                                          {kBegin, "Begin"},
+                                          {kEnd, "End"},
+                                          {kPlus, "Plus"},
+                                          {kMinus, "Minus"},
+                                          {kConst, "Const"},
+                                          {kRead, "Read"},
+                                          {kRepeat, "Repeat"},
+                                          {kTo, "to"},
+                                          {kIf, "If"},
+                                          {kThen, "Then"},
+                                          {kDo, "Do"},
+                                          {kProcedure, "Procedure"},
+                                          {kMulti, "Multi"},
+                                          {kDevide, "Devide"},
+                                          {kLBracket, "LBracket"},
+                                          {kRBracket, "RBracket"},
+                                          {kEqual, "Equal"},
+                                          {kElse, "Else"},
+                                          {kWrite, "Write"},
+                                          {kDot, "Dot"},
+                                          {kColon, "Colon"},
+                                          {kSingleQuote, "SingleQuote"},
+                                          {kDoubleQuote, "DoubleQuote"},
+                                          {kFunction, "Function"},
+                                          {kUntil, "Until"},
+                                          {kDownto, "Downto"},
+                                          {kArray, "Array"},
+                                          {kOf, "Of"},
+                                          {kInteger, "Integer"},
+                                          {kChar, "Char"},
+                                          {kReal, "Real"},
+                                          {kFor, "For"},
+                                          {kString, "string"},
+                                          {kCharacter, "character"},
+                                          {kLSquareBracket, "LSquareBracket"},
+                                          {kRSquareBracket, "RSquareBracket"}};
 
 std::map<char, SymType> CharSymbol{
     {',', kComma},         {';', kSemiColon},
@@ -145,5 +146,5 @@ void error() {
   std::cout << "ERROR" << std::endl;
   std::exit(0);
 }
-} // namespace compiler
+}  // namespace compiler
 #endif

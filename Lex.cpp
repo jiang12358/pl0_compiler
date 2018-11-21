@@ -1,6 +1,6 @@
 #include "Lex.h"
-#include "global.h"
 #include <iostream>
+#include "global.h"
 namespace compiler {
 
 void Lex::init(std::string filename) {
@@ -20,7 +20,7 @@ SymType Lex::getsym() {
     scanner.GetNextChar(c);
   }
 
-  if ((c >= 'a') && (c <= 'z')) { // check if the reserved word
+  if ((c >= 'a') && (c <= 'z')) {  // check if the reserved word
     std::string tempString = "";
     while (((c >= 'a') && (c <= 'z')) || ((c >= '0') && (c <= '9')) ||
            ((c >= 'A') && (c <= 'Z'))) {
@@ -41,7 +41,7 @@ SymType Lex::getsym() {
             tempString = tempString + " ";
       }
     }*/
-  } else if ((c >= '0') && (c <= '9')) { // check if number
+  } else if ((c >= '0') && (c <= '9')) {  // check if number
     int k = 0;
     int num = 0;
     while ((c >= '0') && (c <= '9')) {
@@ -54,7 +54,7 @@ SymType Lex::getsym() {
       scanner.GetNextChar(c);
     }
 
-    if (c != '\.') {
+    if (c != '.') {
       sym = kNumber;
     } else {
       scanner.GetNextChar(c);
@@ -123,10 +123,4 @@ SymType Lex::getsym() {
     scanner.GetNextChar(c);
   }
 }
-} // namespace compiler
-
-int main(int argc, char *argv[]) {
-  compiler::Lex lex;
-  lex.init(std::string(argv[1]));
-  lex.Run();
-}
+}  // namespace compiler
