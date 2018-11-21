@@ -1,52 +1,54 @@
 #ifndef GRAMMAR
 #define GRAMMAR
 #include "global.h"
+#include "Lex.h"
 
 namespace compiler {
-class Grammar {
- public:
-  Grammar(){};
+	class Grammar {
+	public:
+		Grammar() {};
 
-  void Init(std::string filename);
+		void init(std::string filename);
 
-  void program();
 
-  void block();
-  void const_declare();
-  void var_declare();
-  void var_define();
+		void program();
 
-  void procedure_declare();
-  void procedure_define();
-  void function_declare();
-  void function_define();
+		void block();
+		void const_declare();
+		void var_declare();
+		void var_define();
 
-  void parameter_handle();
+		void procedure_declare();
+		void function_declare();
 
-  void format_parameter();
+		void parameter_handle();
 
-  void one_parameter();
+		void format_parameter();
 
-  void array_declare();
+		void one_parameter();
 
-  void statement();
-  void multistatement();
-  void ifstatement();
-  void forstatement();
-  void repeatstatement();
-  void writestatement();
-  void readstatement();
-  void becomestatement();
+		void array_declare();
 
-  void parameter();
+		void statement();
+		void multistatement();
+		void ifstatement();
+		void forstatement();
+		void repeatstatement();
+		void writestatement();
+		void readstatement();
+		void becomestatement();
 
-  void const_();
 
-  void condition();
-  void expression();
-  void item();
-  void factor();
-};
+		void const_();
+
+		void condition();
+		void expression();
+		void item();
+		void factor();
+
+	private:
+		Lex lex;
+	};
 }  // namespace compiler
 
 #endif

@@ -13,6 +13,8 @@ namespace compiler {
 		SymType getsym();
 
 		void Run();
+
+		SymType sym;
 	private:
 		Scanner scanner;
 		char c;
