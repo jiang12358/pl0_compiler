@@ -17,6 +17,8 @@ namespace compiler {
 	}
 
 	SymType Lex::getsym() {
+		id = "";
+
 		while (c == ' ') {
 			scanner.GetNextChar(c);
 		}
@@ -33,6 +35,7 @@ namespace compiler {
 
 			if (WordSymbol.find(tempString) == WordSymbol.end()) {
 				sym = kIdent;
+				id = tempString;
 			}
 			else {
 				sym = WordSymbol[tempString];

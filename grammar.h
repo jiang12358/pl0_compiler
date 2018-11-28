@@ -5,6 +5,8 @@
 
 namespace compiler {
 	class Grammar {
+
+	
 	public:
 		Grammar() {};
 
@@ -13,41 +15,46 @@ namespace compiler {
 
 		void program();
 
-		void block();
-		void const_declare();
-		void var_declare();
-		void var_define();
+		void block(int level);
+		void const_declare(int level);
+		void var_declare(int level);
+		void var_define(int level);
 
-		void procedure_declare();
-		void function_declare();
+		void procedure_declare(int level);
+		void function_declare(int level);
 
-		void parameter_handle();
+		void parameter_handle(int level);
 
-		void format_parameter();
+		void format_parameter(int level);
 
-		void one_parameter();
+		void one_parameter(int level);
 
-		void array_declare();
+		void array_declare(int level);
 
-		void statement();
-		void multistatement();
-		void ifstatement();
-		void forstatement();
-		void repeatstatement();
-		void writestatement();
-		void readstatement();
-		void becomestatement();
+		void statement(int level);
+		void multistatement(int level);
+		void ifstatement(int level);
+		void forstatement(int level);
+		void repeatstatement(int level);
+		void writestatement(int level);
+		void readstatement(int level);
+		void becomestatement(int level);
 
 
-		void const_();
+		void const_(int level);
 
-		void condition();
-		void expression();
-		void item();
-		void factor();
+		void condition(int level);
+		void expression(int level);
+		void item(int level);
+		void factor(int level);
+
+		void enter(int level, std::string name, int pdx, int ptx, objectType kind);
 
 	private:
 		Lex lex;
+		std::vector<table> tables;
+	public:
+		
 	};
 }  // namespace compiler
 

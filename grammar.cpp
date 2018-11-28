@@ -11,24 +11,24 @@ namespace compiler {
 	}
 
 	void Grammar::program() {
-		block();
+		block(0);
 		
 		if (lex.sym == kDot) {
 			std::cout << "This is a program" << std::endl;
 		}
 	}
 
-	void Grammar::block() {
+	void Grammar::block(int level) {
 		lex.getsym();
 		if (lex.sym == kConst) {
 			lex.getsym();
-			const_declare();
+			const_declare(level);
 		}
 
 		while (lex.sym == kComma) {
 			lex.getsym();
 			if (lex.sym == kIdent) {
-				const_declare();
+				const_declare(level);
 			}
 			else {
 				break;
@@ -41,39 +41,40 @@ namespace compiler {
 
 		if (lex.sym == kVar) {
 			lex.getsym();
-			var_declare();
+			var_declare(level);
 		}
 
 		while (lex.sym == kFunction || lex.sym == kProcedure) {
 			if (lex.sym == kFunction) {
 				lex.getsym();
-				function_declare();
+				function_declare(level);
 			}
 
 			if (lex.sym == kProcedure) {
 				lex.getsym();
-				procedure_declare();
+				procedure_declare(level);
 			}
 		}
 		
 		if (lex.sym == kBegin) {
-			multistatement();
+			multistatement(level);
 		}
 		std::cout << "this is a block" << std::endl;
 	}
 
-	void Grammar::const_declare() {
+	void Grammar::const_declare(int level) {
 		if (lex.sym == kIdent) {
 			lex.getsym();
 			if (lex.sym == kEqual) {
 				lex.getsym();
-				const_();
+				const_(level);
+				enter(level, lex.id, 0, 0, kConst);
 			}
 		}
 		std::cout << "This is a const declaration" << std::endl;
 	}
 
-	void Grammar::const_() {
+	void Grammar::const_(int level) {
 		if (lex.sym == kPlus || lex.sym == kMinus) {
 			lex.getsym();
 			if (lex.sym == kRealNum || lex.sym == kNumber) {
@@ -91,16 +92,16 @@ namespace compiler {
 		}
 	}
 
-	void Grammar::var_declare() {
-		var_define();
+	void Grammar::var_declare(int level) {
+		var_define(level);
 		while (lex.sym == kSemiColon) {
 			lex.getsym();
-			var_define();
+			var_define(level);
 		}
 		std::cout << "This is a variable declaration" << std::endl;
 	}
 
-	void Grammar::var_define() {
+	void Grammar::var_define(int level) {
 		if (lex.sym == kIdent) {
 			lex.getsym();
 			while (lex.sym == kComma) {
@@ -117,7 +118,7 @@ namespace compiler {
 				}
 				else if (lex.sym == kArray) {
 					lex.getsym();
-					array_declare();
+					array_declare(level);
 				}
 				else {
 					error();
@@ -128,7 +129,7 @@ namespace compiler {
 		
 	}
 
-	void Grammar::array_declare() {
+	void Grammar::array_declare(int level) {
 		if (lex.sym == kLSquareBracket) {
 			lex.getsym();
 			if (lex.sym == kNumber) {
@@ -147,13 +148,13 @@ namespace compiler {
 		}
 	}
 
-	void Grammar::function_declare() {
+	void Grammar::function_declare(int level) {
 		if (lex.sym == kIdent) {
 			lex.getsym();
 			if (lex.sym == kLBracket) {
 				lex.getsym();
 				if (lex.sym != kRBracket) {
-					format_parameter();
+					format_parameter(level);
 				}
 				if (lex.sym == kRBracket) {
 					lex.getsym();
@@ -162,7 +163,7 @@ namespace compiler {
 						if (lex.sym == kInteger || lex.sym == kChar || lex.sym == kReal) {
 							lex.getsym();
 							if (lex.sym == kSemiColon) {
-								block();
+								block(level);
 								if (lex.sym == kSemiColon) {
 									lex.getsym();
 									std::cout << "This is a function declaration" << std::endl;
@@ -176,13 +177,13 @@ namespace compiler {
 		
 	}
 
-	void Grammar::procedure_declare() {
+	void Grammar::procedure_declare(int level) {
 		if (lex.sym == kIdent) {
 			lex.getsym();
 			if (lex.sym == kLBracket) {
 				lex.getsym();
 				if (lex.sym != kRBracket) {
-					format_parameter();
+					format_parameter(level);
 				}
 
 				//std::cout << lex.sym << std::endl;
@@ -191,7 +192,7 @@ namespace compiler {
 					if (lex.sym == kSemiColon) {
 
 						//std::cout << lex.sym << std::endl;
-						block();
+						block(level);
 						//std::cout << lex.sym << std::endl;
 						if (lex.sym == kSemiColon) {
 							lex.getsym();
@@ -204,16 +205,16 @@ namespace compiler {
 		
 	}
 
-	void Grammar::format_parameter() {
-		one_parameter();
+	void Grammar::format_parameter(int level) {
+		one_parameter(level);
 		while (lex.sym == kSemiColon) {
 			lex.getsym();
-			one_parameter();
+			one_parameter(level);
 		}
 		std::cout << "This is a format parameter" << std::endl;
 	}
 
-	void Grammar::one_parameter() {
+	void Grammar::one_parameter(int level) {
 		if (lex.sym == kVar) {
 			lex.getsym();
 		}
@@ -238,31 +239,31 @@ namespace compiler {
 		}
 	}
 
-	void Grammar::statement() {
+	void Grammar::statement(int level) {
 		
 		switch (lex.sym) {
 		case kBegin: {
-			multistatement();
+			multistatement(level);
 			break;
 		}
 		case kIf: {
-			ifstatement();
+			ifstatement(level);
 			break;
 		}
 		case kFor: {
-			forstatement();
+			forstatement(level);
 			break;
 		}
 		case kRepeat: {
-			repeatstatement();
+			repeatstatement(level);
 			break;
 		}
 		case kWrite: {
-			writestatement();
+			writestatement(level);
 			break;
 		}
 		case kRead: {
-			readstatement();
+			readstatement(level);
 			break;
 		}
 		case kIdent: {
@@ -272,7 +273,7 @@ namespace compiler {
 				lex.getsym();
 				if (lex.sym != kRBracket) {
 					lex.getsym();
-					parameter_handle();
+					parameter_handle(level);
 				}
 				if (lex.sym != kRBracket) {
 					error();
@@ -283,7 +284,7 @@ namespace compiler {
 				}
 			}
 			else {
-				becomestatement();
+				becomestatement(level);
 			}
 			break;
 		}
@@ -296,13 +297,13 @@ namespace compiler {
 		std::cout << "this is a statement" << std::endl;
 	}
 
-	void Grammar::multistatement() {
+	void Grammar::multistatement(int level) {
 		//std::cout << lex.sym << std::endl;
 		lex.getsym();
-			statement();
+			statement(level);
 			while (lex.sym == kSemiColon) {
 				lex.getsym();
-				statement();
+				statement(level);
 			}
 			if (lex.sym != kEnd) {
 				error();
@@ -311,21 +312,21 @@ namespace compiler {
 		std::cout << "This is a multistatement" << std::endl;
 	}
 
-	void Grammar::ifstatement() {
+	void Grammar::ifstatement(int level) {
 		lex.getsym();
-		condition();
+		condition(level);
 		if (lex.sym == kThen) {
 			lex.getsym();
-			statement();
+			statement(level);
 			if (lex.sym == kElse) {
 				lex.getsym();
-				statement();
+				statement(level);
 			}
 		}
 		std::cout << "This is an if statement" << std::endl;
 	}
 
-	void Grammar::forstatement() {
+	void Grammar::forstatement(int level) {
 		lex.getsym();
 		if (lex.sym == kIdent) {
 			lex.getsym();
@@ -336,14 +337,14 @@ namespace compiler {
 				error();
 			}
 			
-			expression();
+			expression(level);
 			if (lex.sym == kTo || lex.sym == kDownto) {
 				lex.getsym();
-				expression();
+				expression(level);
 				
 				if (lex.sym == kDo) {
 					lex.getsym();
-					statement();
+					statement(level);
 				}
 				else {
 					error();
@@ -356,12 +357,12 @@ namespace compiler {
 		std::cout << "This is a for statement" << std::endl;
 	}
 
-	void Grammar::repeatstatement() {
+	void Grammar::repeatstatement(int level) {
 		lex.getsym();
-		statement();
+		statement(level);
 		if (lex.sym == kUntil) {
 			lex.getsym();
-			condition();
+			condition(level);
 		}
 		else {
 			error();
@@ -369,7 +370,7 @@ namespace compiler {
 		std::cout << "This is a repeat statement" << std::endl;
 	}
 
-	void Grammar::writestatement() {
+	void Grammar::writestatement(int level) {
 		lex.getsym();
 		if (lex.sym == kLBracket) {
 			lex.getsym();
@@ -377,11 +378,11 @@ namespace compiler {
 				lex.getsym();
 				if (lex.sym == kComma) {
 					lex.getsym();
-					expression();
+					expression(level);
 				}
 			}
 			else {
-				expression();
+				expression(level);
 			}
 			if (lex.sym != kRBracket) {
 				error();
@@ -393,7 +394,7 @@ namespace compiler {
 		std::cout << "This is a writestatement" << std::endl;
 	}
 
-	void Grammar::readstatement() {
+	void Grammar::readstatement(int level) {
 		lex.getsym();
 		if (lex.sym == kLBracket) {
 			lex.getsym();
@@ -421,10 +422,10 @@ namespace compiler {
 		std::cout << "This is a readstatement" << std::endl;
 	}
 
-	void Grammar::becomestatement() {
+	void Grammar::becomestatement(int level) {
 			if (lex.sym == kLSquareBracket) {
 				lex.getsym();
-				expression();
+				expression(level);
 				if (lex.sym != kRSquareBracket) {
 					error();
 				}
@@ -435,39 +436,39 @@ namespace compiler {
 
 			if (lex.sym == kBecome) {
 				lex.getsym();
-				expression();
+				expression(level);
 			}
 		
 		std::cout << "This is a become statement" << std::endl;
 	}
 
-	void Grammar::expression() {
+	void Grammar::expression(int level) {
 		if (lex.sym == kPlus || lex.sym == kMinus) {
 			lex.getsym();
 		}
-		item();
+		item(level);
 		while (lex.sym == kPlus || lex.sym == kMinus) {
 			lex.getsym();
-			item();
+			item(level);
 		}
 		std::cout << "This is an expression" << std::endl;
 	}
 
-	void Grammar::item() {
-		factor();
+	void Grammar::item(int level) {
+		factor(level);
 		while (lex.sym == kMulti || lex.sym == kDevide) {
 			lex.getsym();
-			factor();
+			factor(level);
 		}
 		std::cout << "This is an item" << std::endl;
 	}
 
-	void Grammar::factor() {
+	void Grammar::factor(int level) {
 		if (lex.sym == kIdent) {
 			lex.getsym();
 			if (lex.sym == kLSquareBracket) {
 				lex.getsym();
-				expression();
+				expression(level);
 				if (lex.sym != kRSquareBracket) {
 					error();
 				}
@@ -478,7 +479,7 @@ namespace compiler {
 			else if (lex.sym == kLBracket) {
 				lex.getsym();
 				if (lex.sym != kRBracket) {
-					parameter_handle();
+					parameter_handle(level);
 				}
 				if (lex.sym != kRBracket) {
 					error();
@@ -499,7 +500,7 @@ namespace compiler {
 		}
 		else if (lex.sym == kLBracket) {
 			lex.getsym();
-			expression();
+			expression(level);
 			if (lex.sym != kRBracket) {
 				error();
 			}
@@ -510,25 +511,36 @@ namespace compiler {
 		std::cout << "This is a factor" << std::endl;
 	}
 
-	void Grammar::parameter_handle() {
+	void Grammar::parameter_handle(int level) {
 		if (lex.sym != kRBracket) {
-			expression();
+			expression(level);
 			while (lex.sym == kComma) {
 				lex.getsym();
-				expression();
+				expression(level);
 			}
 		}
 		std::cout << "This is a parameter expression" << std::endl;
 	}
 
-	void Grammar::condition() {
-		expression();
+	void Grammar::condition(int level) {
+		expression(level);
 		if (lex.sym == kEqual || lex.sym == kLess || lex.sym == kLessEqual || lex.sym == kNotEqual ||
 			lex.sym == kGreater || lex.sym == kGreaterEqual) {
 			lex.getsym();
-			expression();
+			expression(level);
 			std::cout << "This a condition" << std::endl;
 		}
+	}
+
+	void Grammar::enter(int level, std::string name, int pdx, int ptx, objectType kind) {
+		table temp = table();
+		temp.name = name;
+		temp.level = level;
+		temp.kind = kind;
+		tables.push_back(temp);
+		
+
+
 	}
 
 }  // namespace compiler

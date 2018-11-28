@@ -58,6 +58,13 @@ namespace compiler {
 		kRealNum = 48
 	};
 
+	enum objectType {
+		kConst = 0,
+		kVar = 1,
+		kProcedure = 2,
+		kFunction = 3
+	};
+
 	static std::map<SymType, std::string> SymbolDict{ {kNull, "NULL"},
 											  {kNumber, "NUMBER"},
 											  {kBecome, "BECOME"},
@@ -146,5 +153,13 @@ namespace compiler {
 		std::cout << "ERROR" << std::endl;
 		std::exit(0);
 	}
+
+	typedef struct {
+		std::string name;
+		characterType kind;
+		int level;
+		int value;
+		int address;
+	} table;
 }  // namespace compiler
 #endif

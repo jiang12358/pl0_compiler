@@ -15,9 +15,13 @@ namespace compiler {
 		void Run();
 
 		SymType sym;
+
+		std::string id;
 	private:
 		Scanner scanner;
 		char c;
+
+		
 	};
 
 }
