@@ -58,12 +58,7 @@ namespace compiler {
 		kRealNum = 48
 	};
 
-	enum objectType {
-		kConst = 0,
-		kVar = 1,
-		kProcedure = 2,
-		kFunction = 3
-	};
+
 
 	static std::map<SymType, std::string> SymbolDict{ {kNull, "NULL"},
 											  {kNumber, "NUMBER"},
@@ -124,6 +119,8 @@ namespace compiler {
 		{'=', kEqual},         {'[', kLSquareBracket},
 		{']', kRSquareBracket} };
 
+	static std::map<int, std::string> CodeSymbol{ {0, "LDA"},{1,"LOD"}, {2, "LDI"}, {3, "DIS"}, {8, "FCT"}, {9, "INT"}, {10, "JMP"}, {11, "JPC"}, {12, "SWT"}, {13, "CAS"}, {14, "F1U"}, {15, "F2U"},{16, "F1D"}, {17, "F2D"}, {18, "MKS"}, {19, "CAL"}, {20, "IDX"}, {21, "IXX"}, {22, "LDB"}, {23, "CPB"}, {24, "LDC"}, {25, "LDR"}, {26, "FLT"}, {27, "RED"}, {28, "WRS"}, {29, "WRW"}, {30, "WRU"}, {31, "HLT"}, {32, "EXP"}, {33, "EXF"}, {34, "LDT"}, {35, "NOT"}, {36, "MUS"}, {37, "WRR"}, {38,"STO"}, {39, "EQR"}, {40, "NER"}, {41, "LSR"}, {42,"LER"}, {43, "GTR"}, {44, "GER"}, {45, "EQL"}, {46, "NEQ"}, {47, "LSS"}, {48, "LER"}, {49, "GRT"}, {50, "GEQ"}, {51, "ORR"}, {52, "ADD"}, {53, "SUB"}, {54, "ADR"}, {55, "SUR"}, {56, "AND"}, {57, "MUL"}, {58, "DIV"}, {59, "MOD"}, {60, "MUR"}, {61, "DIR"}, {62, "RDL"}, {63, "WRL"} }
+	;
 	static std::map<std::string, SymType> WordSymbol{ {"const", kConst},
 											  {"var", kVar},
 											  {"begin", kBegin},
@@ -156,10 +153,19 @@ namespace compiler {
 
 	typedef struct {
 		std::string name;
-		characterType kind;
 		int level;
-		int value;
+		SymType kind;
 		int address;
+		bool ifArray;
+		int num;
+		double real;
+		char c;
 	} table;
+
+	typedef struct {
+		std::string op;
+		int x;
+		int y;
+	} code;
 }  // namespace compiler
 #endif

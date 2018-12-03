@@ -29,7 +29,7 @@ namespace compiler {
 
 		void one_parameter(int level);
 
-		void array_declare(int level);
+		void array_declare(int level, std::vector<std::string> &tempStrings);
 
 		void statement(int level);
 		void multistatement(int level);
@@ -48,11 +48,31 @@ namespace compiler {
 		void item(int level);
 		void factor(int level);
 
-		void enter(int level, std::string name, int pdx, int ptx, objectType kind);
+		void enter(int level, std::string name, SymType kind, int size);
+		void enter(int level, std::string name, SymType kind, int size, int value);
+		void enter(int level, std::string name, SymType kind, int size, double value);
+		void enter(int level, std::string name, SymType kind, int size, char value);
 
+		void clearTable(int level);
+
+		void printTable();
+
+		int position(std::string name, int level, int other);
+
+		void emit(std::string op);
+		void emit(std::string op, int y);
+		void emit(std::string op, int x, int y);
+
+		void printCode();
 	private:
 		Lex lex;
 		std::vector<table> tables;
+		int tab_size;
+		int max_level;
+		int last_address;
+		std::map<int, int> level_last_adr;
+		std::string output_file;
+		std::vector<code> codes;
 	public:
 		
 	};

@@ -16,11 +16,15 @@ namespace compiler {
 
 		SymType sym;
 
-		std::string id;
+		std::string last_id;
+
+		int last_num;
+
+		
 	private:
 		Scanner scanner;
 		char c;
-
+		
 		
 	};
 
