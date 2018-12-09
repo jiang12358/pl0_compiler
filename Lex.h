@@ -4,29 +4,26 @@
 #include "Scanner.h"
 #include "global.h"
 namespace compiler {
-	class Lex {
-	public:
-		Lex() {};
+class Lex {
+ public:
+  Lex(){};
 
-		void init(std::string filename);
+  void init(std::string filename);
 
-		SymType getsym();
+  SymType getsym();
 
-		void Run();
+  void Run();
 
-		SymType sym;
+  SymType sym;
 
-		std::string last_id;
+  std::string last_id;
 
-		int last_num;
+  int last_num;
 
-		
-	private:
-		Scanner scanner;
-		char c;
-		
-		
-	};
+ private:
+  Scanner scanner;
+  char c;
+};
 
-}
+}  // namespace compiler
 #endif

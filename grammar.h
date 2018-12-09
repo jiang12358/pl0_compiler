@@ -1,81 +1,78 @@
 #ifndef GRAMMAR
 #define GRAMMAR
-#include "global.h"
 #include "Lex.h"
+#include "global.h"
 
 namespace compiler {
-	class Grammar {
+class Grammar {
+ public:
+  Grammar(){};
 
-	
-	public:
-		Grammar() {};
+  void init(std::string filename);
 
-		void init(std::string filename);
+  void program();
 
+  void block(int level);
+  void const_declare(int level);
+  void var_declare(int level);
+  void var_define(int level);
 
-		void program();
+  void procedure_declare(int level);
+  void function_declare(int level);
 
-		void block(int level);
-		void const_declare(int level);
-		void var_declare(int level);
-		void var_define(int level);
+  void parameter_handle(int level);
 
-		void procedure_declare(int level);
-		void function_declare(int level);
+  void format_parameter(int level);
 
-		void parameter_handle(int level);
+  void one_parameter(int level);
 
-		void format_parameter(int level);
+  void array_declare(int level, std::vector<std::string> &tempStrings);
 
-		void one_parameter(int level);
+  void statement(int level);
+  void multistatement(int level);
+  void ifstatement(int level);
+  void forstatement(int level);
+  void repeatstatement(int level);
+  void writestatement(int level);
+  void readstatement(int level);
+  void becomestatement(int level);
 
-		void array_declare(int level, std::vector<std::string> &tempStrings);
+  void const_(int level);
 
-		void statement(int level);
-		void multistatement(int level);
-		void ifstatement(int level);
-		void forstatement(int level);
-		void repeatstatement(int level);
-		void writestatement(int level);
-		void readstatement(int level);
-		void becomestatement(int level);
+  void condition(int level);
+  void expression(int level);
+  void item(int level);
+  void factor(int level);
 
+  void enter(int level, std::string name, SymType kind, int size);
+  void enter(int level, std::string name, SymType kind, int size, int value);
+  void enter(int level, std::string name, SymType kind, int size, double value);
+  void enter(int level, std::string name, SymType kind, int size, char value);
 
-		void const_(int level);
+  void clearTable(int level);
 
-		void condition(int level);
-		void expression(int level);
-		void item(int level);
-		void factor(int level);
+  void printTable();
 
-		void enter(int level, std::string name, SymType kind, int size);
-		void enter(int level, std::string name, SymType kind, int size, int value);
-		void enter(int level, std::string name, SymType kind, int size, double value);
-		void enter(int level, std::string name, SymType kind, int size, char value);
+  int position(std::string name, int level, int other);
 
-		void clearTable(int level);
+  void emit(std::string op);
+  void emit(std::string op, int y);
+  void emit(std::string op, int x, int y);
 
-		void printTable();
+  void printCode();
 
-		int position(std::string name, int level, int other);
+ private:
+  Lex lex;
+  std::vector<table> tables;
+  int tab_size;
+  int max_level;
+  int last_address;
+  std::map<int, int> level_last_adr;
+  std::string output_file;
+  std::vector<code> codes;
 
-		void emit(std::string op);
-		void emit(std::string op, int y);
-		void emit(std::string op, int x, int y);
-
-		void printCode();
-	private:
-		Lex lex;
-		std::vector<table> tables;
-		int tab_size;
-		int max_level;
-		int last_address;
-		std::map<int, int> level_last_adr;
-		std::string output_file;
-		std::vector<code> codes;
-	public:
-		
-	};
+ public:
+};
 }  // namespace compiler
 
 #endif
