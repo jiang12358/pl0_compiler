@@ -45,6 +45,7 @@ class Grammar {
   void factor(int level);
 
   void enter(int level, std::string name, SymType kind, int size);
+  void enter(int level, std::string name, SymType kind, int size, bool ifMinus);
   void enter(int level, std::string name, SymType kind, int size, int value);
   void enter(int level, std::string name, SymType kind, int size, double value);
   void enter(int level, std::string name, SymType kind, int size, char value);
@@ -61,12 +62,21 @@ class Grammar {
 
   void printCode();
 
+  void runCodes();
+  void runSingleCode();
+
+  int base(int levelGap, int b);
+
  private:
   Lex lex;
   std::vector<table> tables;
   int tab_size;
   int max_level;
   int last_address;
+  int pc = 0;
+  int t = 0;
+  int b = 1;
+  int dx = 0;
   std::map<int, int> level_last_adr;
   std::string output_file;
   std::vector<code> codes;

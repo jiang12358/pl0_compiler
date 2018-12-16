@@ -84,19 +84,23 @@ void Grammar::const_declare(int level) {
 
 void Grammar::const_(int level) {
   if (lex.sym == kPlus || lex.sym == kMinus) {
+    bool ifMinus = lex.sym == kMinus;
     lex.getsym();
     if (lex.sym == kRealNum || lex.sym == kNumber) {
+      SymType tempSym = lex.sym;
       lex.getsym();
-      enter(level, lex.last_id, kConst, 1);
+      enter(level, lex.last_id, tempSym, 1, ifMinus);
       std::cout << "This is a const" << std::endl;
     }
   } else if (lex.sym == kRealNum || lex.sym == kNumber) {
+    SymType tempSym = lex.sym;
     lex.getsym();
-    enter(level, lex.last_id, kConst, 1);
+    enter(level, lex.last_id, tempSym, 1);
     std::cout << "This is a const" << std::endl;
   } else if (lex.sym == kCharacter) {
+    SymType tempSym = lex.sym;
     lex.getsym();
-    enter(level, lex.last_id, kConst, 1);
+    enter(level, lex.last_id, tempSym, 1);
     std::cout << "This is a const" << std::endl;
   }
 }
@@ -624,25 +628,58 @@ void Grammar::condition(int level) {
 void Grammar::enter(int level, std::string name, SymType kind, int size) {
   table temp = table();
   temp.name = name;
-  temp.level = level;
+
   temp.kind = kind;
 
   if (size == 1) {
     temp.ifArray = false;
-    temp.address = level_last_adr[level] + 1;
-    level_last_adr[level] = temp.address;
+    if (kind == kVar) {
+      temp.address = dx;
+      dx++;
+      temp.level = level;
+    } else if (kind == kCharacter) {
+      temp.c = lex.char_value;
+    } else if (kind == kNumber) {
+      temp.num = lex.last_num;
+    } else if (kind == kRealNum) {
+      temp.real = lex.double_num;
+    } else if (kind == kFunction) {
+      temp.level = level;
+    } else if (kind == kProcedure) {
+      temp.level = level;
+    }
   } else if (size > 1) {
     temp.ifArray = true;
-    temp.address = level_last_adr[level] + 1;
-    level_last_adr[level] = temp.address;
+    if (kind == kVar) {
+      temp.address = dx;
+      dx += size;
+      temp.level = level;
+    }
   } else {
     temp.ifArray = false;
   }
 
-  if (size > 0 && max_level < level) {
-    max_level = level;
-    temp.address = 0;
-    level_last_adr[level] = temp.address;
+  tables.push_back(temp);
+}
+
+void Grammar::enter(int level, std::string name, SymType kind, int size,
+                    bool ifMinus) {
+  table temp = table();
+  temp.name = name;
+
+  temp.kind = kind;
+
+  if (size == 1) {
+    temp.ifArray = false;
+    if (kind == kNumber) {
+      temp.num = -lex.last_num;
+    } else if (kind == kRealNum) {
+      temp.real = -lex.double_num;
+    } else {
+      error();
+    }
+  } else {
+    error();
   }
 
   tables.push_back(temp);
@@ -747,13 +784,92 @@ void Grammar::printCode() {
     //}
     // else if (code.op <= 30) {
     //	std::cout << CodeSymbol[code.op] << " " << code.x << " " << code.y <<
-    //std::endl;
+    // std::endl;
     //}
     // else {
     //	std::cout << CodeSymbol[code.op] << std::endl;
     //}
   }
 }
+
+void Grammar::runCodes() {
+  pc = 0;
+  t = 0;
+  b = 1;
+  runningStack[0] = 0;
+  runningStack[1] = 0;
+  runningStack[2] = 0;
+  runningStack[3] = 0;
+  do {
+    runSingleCode();
+  } while (pc != 0);
+}
+
+void Grammar::runSingleCode() {
+  code thisCode = codes[pc];
+  pc++;
+  if (thisCode.op == "OPR") {
+    if (thisCode.y == 0) {
+      t = b - 1;
+      pc = runningStack[t + 3];
+      b = runningStack[t + 2];
+    } else if (thisCode.y == 1) {
+      runningStack[t] = -runningStack[t];
+    } else if (thisCode.y == 2) {
+      t--;
+      runningStack[t] = runningStack[t] + runningStack[t + 1];
+
+    } else if (thisCode.y == 3) {
+      t--;
+      runningStack[t] = runningStack[t] - runningStack[t + 1];
+    } else if (thisCode.y == 4) {
+      t--;
+      runningStack[t] = runningStack[t] * runningStack[t + 1];
+
+    } else if (thisCode.y == 5) {
+      t--;
+      runningStack[t] = runningStack[t] / runningStack[t + 1];
+    } else if (thisCode.y == 6) {
+    } else if (thisCode.y == 7) {
+    } else if (thisCode.y == 8) {
+      t--;
+      runningStack[t] = (runningStack[t] == runningStack[t + 1]);
+    } else if (thisCode.y == 9) {
+      t--;
+      runningStack[t] = (runningStack[t] != runningStack[t + 1]);
+    } else if (thisCode.y == 10) {
+      t--;
+      runningStack[t] = (runningStack[t] < runningStack[t + 1]);
+    } else if (thisCode.y == 11) {
+      t--;
+      runningStack[t] = (runningStack[t] <= runningStack[t + 1]);
+    } else if (thisCode.y == 12) {
+      t--;
+      runningStack[t] = (runningStack[t] > runningStack[t + 1]);
+    } else if (thisCode.y == 13) {
+      t--;
+      runningStack[t] = (runningStack[t] >= runningStack[t + 1]);
+    } else {
+      error();
+    }
+  } else if (thisCode.op == "JMP") {
+  } else if (thisCode.op == "LOD") {
+    t++;
+    runningStack[t] = runningStack[base(thisCode.x, b) + thisCode.y];
+  } else if (thisCode.op == "LIT") {
+    t++;
+    runningStack[t] = thisCode.y;
+  } else if (thisCode.op == "RED") {
+  } else if (thisCode.op == "STO") {
+    t--;
+    runningStack[base(thisCode.x, b) + thisCode.y] = runningStack[t];
+  } else if (thisCode.op == "WRT") {
+  } else if (thisCode.op == "F1U") {
+  } else if (thisCode.op == "F2U") {
+  }
+}
+
+int Grammar::base(int levelGap, int b) {}
 }  // namespace compiler
 
 int main(int argc, char *argv[]) {

@@ -60,10 +60,16 @@ SymType Lex::getsym() {
       last_num = num;
       sym = kNumber;
     } else {
+      double_num = num;
+      num = 0;
+      double digit = 1;
       scanner.GetNextChar(c);
       while ((c >= '0') && (c <= '9')) {
         scanner.GetNextChar(c);
+        digit *= 10;
+        num = 10 * num + (c - '0');
       }
+      double_num += num / digit;
       sym = kRealNum;
     }
     // std::cout << SymbolDict[sym] << "\t" << num << std::endl;
@@ -116,6 +122,7 @@ SymType Lex::getsym() {
     scanner.GetNextChar(c);
     if (((c >= 'A') && (c <= 'Z')) || ((c >= 'a') && (c <= 'z')) ||
         ((c >= '0') && (c <= '9'))) {
+      char_value = c;
       scanner.GetNextChar(c);
       if (c == '\'') {
         sym = kCharacter;

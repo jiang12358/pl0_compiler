@@ -19,6 +19,8 @@ class Lex {
   std::string last_id;
 
   int last_num;
+  double double_num;
+  char char_value;
 
  private:
   Scanner scanner;

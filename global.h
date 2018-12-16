@@ -173,7 +173,7 @@ typedef struct {
   char c;
 } table;
 
-static std::stack<int> runningStack;
+static std::vector<int> runningStack(1000, 0);
 
 typedef struct {
   std::string op;
