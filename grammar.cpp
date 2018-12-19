@@ -14,7 +14,7 @@ void Grammar::init(std::string filename) {
 }
 
 void Grammar::program() {
-  block(0);
+  block(0, false);
   if (lex.sym == kDot) {
     emit("OPR", 0, 0);
     std::cout << "This is a program" << std::endl;
@@ -23,9 +23,52 @@ void Grammar::program() {
   printCode();
 }
 
-void Grammar::block(int level) {
-  emit("JMP", 0, 0);
-  int jmp_flag = codes.size() - 1;
+void Grammar::block(int level, bool iffunction) {
+  dx = 3;
+  int tx0 = tables.size() - 1;
+  int cx0 = codes.size() - 1;
+  
+ 
+  int jmp_flag = codes.size();
+
+  int procedure_flag = tables.size() - 1;
+  int params_num = 0;
+  if (lex.sym == kLBracket) {
+	  lex.getsym();
+	  if (lex.sym != kRBracket) {
+		  params_num = format_parameter(level + 1);
+	  }
+	  tables[procedure_flag].params_num = params_num;
+	  // std::cout << lex.sym << std::endl;
+	  if (lex.sym == kRBracket) {
+		  lex.getsym();
+		  if (iffunction) {
+			  if (lex.sym == kColon) {
+				  lex.getsym();
+				  if (lex.sym == kInteger || lex.sym == kChar || lex.sym == kReal) {
+					  lex.getsym();
+				  }
+			  }
+		  }
+		  if (lex.sym == kSemiColon) {
+			  emit("JMP", 0, 0);
+			  tables[procedure_flag].address = codes.size();
+			  for (int i = params_num; i > 0; i--) {
+				  if (tables[tables.size() - i].kind == kVarParam) {
+					  //load address
+
+				  }
+				  else {
+					  //load value
+					  emit("STO", 0, tables[tables.size() - i].address);
+				  }
+			  }
+			  // std::cout << lex.sym << std::endl;
+			  // std::cout << lex.sym << std::endl;
+		  }
+	  }
+  }
+
   lex.getsym();
   if (lex.sym == kConst) {
     lex.getsym();
@@ -63,7 +106,9 @@ void Grammar::block(int level) {
   }
 
   if (lex.sym == kBegin) {
+    
     codes[jmp_flag].y = codes.size();
+	emit("INC", 0, dx);
     multistatement(level);
   }
 
@@ -174,12 +219,18 @@ void Grammar::function_declare(int level) {
     function_name = lex.last_id;
     enter(level, function_name, kFunction, 0);
 
+	int params_num = 0;
+	int function_flag = tables.size() - 1;
+	tables[function_flag].address = codes.size();
+
+
     lex.getsym();
-    if (lex.sym == kLBracket) {
+    /*if (lex.sym == kLBracket) {
       lex.getsym();
       if (lex.sym != kRBracket) {
-        format_parameter(level + 1);
+        params_num = format_parameter(level + 1);
       }
+	  tables[function_flag].params_num = params_num;
       if (lex.sym == kRBracket) {
         lex.getsym();
         if (lex.sym == kColon) {
@@ -188,9 +239,9 @@ void Grammar::function_declare(int level) {
             lex.getsym();
             if (lex.sym == kSemiColon) {
               int i = position(function_name, 0, 0);
-              tables[i].address = codes.size();
-              block(level + 1);
-              if (lex.sym == kSemiColon) {
+              tables[i].address = codes.size();*/
+              block(level + 1, true);
+              /*if (lex.sym == kSemiColon) {
                 lex.getsym();
                 std::cout << "This is a function declaration" << std::endl;
               }
@@ -198,7 +249,7 @@ void Grammar::function_declare(int level) {
           }
         }
       }
-    }
+    }*/
   }
 }
 
@@ -209,52 +260,63 @@ void Grammar::procedure_declare(int level) {
     procedure_name = lex.last_id;
     enter(level, procedure_name, kProcedure, 0);
 
+	int params_num = 0;
+	int procedure_flag = tables.size() - 1;
+	tables[procedure_flag].address = codes.size();
+
     lex.getsym();
     if (lex.sym == kLBracket) {
-      lex.getsym();
-      if (lex.sym != kRBracket) {
-        format_parameter(level + 1);
-      }
 
-      // std::cout << lex.sym << std::endl;
-      if (lex.sym == kRBracket) {
-        lex.getsym();
-        if (lex.sym == kSemiColon) {
-          int i = position(procedure_name, 0, 0);
-          tables[i].address = codes.size();
-          // std::cout << lex.sym << std::endl;
-          block(level + 1);
+          block(level + 1, false);
           // std::cout << lex.sym << std::endl;
           if (lex.sym == kSemiColon) {
             lex.getsym();
             std::cout << "This is a procedure declaration" << std::endl;
           }
-        }
-      }
+        
+      
     }
   }
 }
 
-void Grammar::format_parameter(int level) {
+int Grammar::format_parameter(int level) {
+	int params_num = 0;
   one_parameter(level);
+  params_num++;
   while (lex.sym == kSemiColon) {
     lex.getsym();
     one_parameter(level);
+	params_num++;
   }
   std::cout << "This is a format parameter" << std::endl;
+  return params_num;
 }
 
 void Grammar::one_parameter(int level) {
+	bool ifvar = false;
+	std::vector<std::string> temp_strings;
   if (lex.sym == kVar) {
     lex.getsym();
+	ifvar = true;
   }
   if (lex.sym == kIdent) {
-    enter(level, lex.last_id, kVar, 1);
+	  if (ifvar) {
+	     enter(level, lex.last_id, kVarParam, 1);
+	  }
+	  else {
+		  temp_strings.emplace_back(lex.last_id);
+	  }
+    
     lex.getsym();
     while (lex.sym == kComma) {
       lex.getsym();
       if (lex.sym == kIdent) {
-        enter(level, lex.last_id, kVar, 1);
+		  if (ifvar) {
+			  enter(level, lex.last_id, kVarParam, 1);
+		  }
+		  else {
+			  temp_strings.emplace_back(lex.last_id);
+		  }
         lex.getsym();
       } else {
         error();
@@ -265,6 +327,11 @@ void Grammar::one_parameter(int level) {
       if (lex.sym == kInteger || lex.sym == kReal || lex.sym == kChar) {
         lex.getsym();
         std::cout << "This is a parameter" << std::endl;
+		if (!ifvar) {
+			for (auto temp_string : temp_strings) {
+				enter(level, temp_string, kVar, 1);
+			}
+		}
       }
     }
   }
@@ -343,15 +410,18 @@ void Grammar::multistatement(int level) {
 void Grammar::ifstatement(int level) {
   lex.getsym();
   condition(level);
-  emit("JRC", 0, 0);
+  emit("JEZ", 0, 0);
   int codeflag = codes.size() - 1;
   if (lex.sym == kThen) {
     lex.getsym();
     statement(level);
     if (lex.sym == kElse) {
+		emit("JMP", 0, 0);
+		int jmp_flag = codes.size() - 1;
       codes[codeflag].y = codes.size();
       lex.getsym();
       statement(level);
+	  codes[jmp_flag].y = codes.size();
     } else {
       codes[codeflag].y = codes.size();
     }
@@ -373,22 +443,53 @@ void Grammar::forstatement(int level) {
 
     expression(level);
     emit("STO", level - tables[i].level, tables[i].address);
-    if (lex.sym == kTo || lex.sym == kDownto) {
+int for_start_mark = codes.size();
+	emit("LOD", level - tables[i].level, tables[i].address);
+    if (lex.sym == kTo ) {
       lex.getsym();
+      
       expression(level);
-
+	  
+	  emit("OPR", 0, 11);
+	  emit("JEZ", 0, 0);
+	  int for_end_flag = codes.size() - 1;
       if (lex.sym == kDo) {
         begin = codes.size();
-        emit("F1U", 0, begin - 1);
         lex.getsym();
         statement(level);
-        emit("F2U", 0, codes.size() - 1);
+		emit("LOD", level - tables[i].level, tables[i].address);
+		emit("LIT", 0, 1);
+		emit("OPR", 0, 2);
+		emit("STO", level - tables[i].level, tables[i].address);
+		emit("JMP", 0, for_start_mark);
+		codes[for_end_flag].y = codes.size();
       } else {
         error();
       }
-    } else {
-      error();
-    }
+    } else if (lex.sym == kDownto){
+		lex.getsym();
+		expression(level);
+		emit("OPR", 0, 13);
+		emit("JEZ", 0, 0);
+		int for_end_flag = codes.size() - 1;
+		if (lex.sym == kDo) {
+			begin = codes.size();
+			lex.getsym();
+			statement(level);
+			emit("LOD", level - tables[i].level, tables[i].address);
+			emit("LIT", 0, 1);
+			emit("OPR", 0, 3);
+			emit("STO", level - tables[i].level, tables[i].address);
+			emit("JMP", 0, for_start_mark);
+			codes[for_end_flag].y = codes.size();
+		}
+		else {
+			error();
+		}
+	}
+	else {
+		error();
+	}
   }
   std::cout << "This is a for statement" << std::endl;
 }
@@ -400,7 +501,7 @@ void Grammar::repeatstatement(int level) {
   if (lex.sym == kUntil) {
     lex.getsym();
     condition(level);
-    emit("JRC", 0, mark);
+    emit("JEZ", 0, mark);
   } else {
     error();
   }
@@ -412,15 +513,17 @@ void Grammar::writestatement(int level) {
   if (lex.sym == kLBracket) {
     lex.getsym();
     if (lex.sym == kString) {
+      saved_string.emplace_back(lex.last_string);
+      emit("WRT", 0, saved_string.size() - 1);
       lex.getsym();
       if (lex.sym == kComma) {
         lex.getsym();
         expression(level);
-        emit("WRT", 0, 0);
+        emit("WRT", 0, -1);
       }
     } else {
       expression(level);
-      emit("WRT", 0, 0);
+      emit("WRT", 0, -1);
     }
     if (lex.sym != kRBracket) {
       error();
@@ -436,7 +539,8 @@ void Grammar::readstatement(int level) {
   if (lex.sym == kLBracket) {
     lex.getsym();
     if (lex.sym == kIdent) {
-      emit("RED", level - tables[position(lex.last_id, 0, 0)].level,
+      emit("RED", 0, 0);
+      emit("STO", level - tables[position(lex.last_id, 0, 0)].level,
            tables[position(lex.last_id, 0, 0)].address);
       lex.getsym();
       while (lex.sym == kComma) {
@@ -444,7 +548,8 @@ void Grammar::readstatement(int level) {
         if (lex.sym != kIdent) {
           error();
         }
-        emit("RED", level - tables[position(lex.last_id, 0, 0)].level,
+        emit("RED", 0, 0);
+        emit("STO", level - tables[position(lex.last_id, 0, 0)].level,
              tables[position(lex.last_id, 0, 0)].address);
         lex.getsym();
       }
@@ -637,7 +742,11 @@ void Grammar::enter(int level, std::string name, SymType kind, int size) {
       temp.address = dx;
       dx++;
       temp.level = level;
-    } else if (kind == kCharacter) {
+	}
+	else if (kind == kVarParam) {
+		
+	}
+	else if (kind == kChar) {
       temp.c = lex.char_value;
     } else if (kind == kNumber) {
       temp.num = lex.last_num;
@@ -748,15 +857,16 @@ int Grammar::position(std::string name, int level, int other) {
   for (int i = tables.size() - 1; i >= 0; i--) {
     if (name == tables[i].name) {
       flag = i;
-      break;
+      return i;
     }
   }
-
+/*
   if (!tables[flag].ifArray) {
     return tables[flag].address;
   } else {
     return tables[flag].address + other;
   }
+*/
 }
 
 void Grammar::clearTable(int level) {
@@ -778,9 +888,11 @@ void Grammar::printTable() {
 }
 
 void Grammar::printCode() {
+	int p = 0;
   for (auto code : codes) {
     // if (code.op <= 3) {
-    std::cout << code.op << " " << code.x << " " << code.y << std::endl;
+    std::cout << p<<"  "<<code.op << " " << code.x << " " << code.y << std::endl;
+	p++;
     //}
     // else if (code.op <= 30) {
     //	std::cout << CodeSymbol[code.op] << " " << code.x << " " << code.y <<
@@ -853,6 +965,12 @@ void Grammar::runSingleCode() {
       error();
     }
   } else if (thisCode.op == "JMP") {
+    pc = thisCode.y;
+  } else if (thisCode.op == "JEZ") {
+	  if (runningStack[t] == 0) {
+		  pc = thisCode.y;
+	}
+	  t--;
   } else if (thisCode.op == "LOD") {
     t++;
     runningStack[t] = runningStack[base(thisCode.x, b) + thisCode.y];
@@ -860,20 +978,41 @@ void Grammar::runSingleCode() {
     t++;
     runningStack[t] = thisCode.y;
   } else if (thisCode.op == "RED") {
+    t++;
+    int a;
+    scanf_s("%d", &a);
+    runningStack[t] = a;
   } else if (thisCode.op == "STO") {
-    t--;
     runningStack[base(thisCode.x, b) + thisCode.y] = runningStack[t];
+    t--;
   } else if (thisCode.op == "WRT") {
+    if (thisCode.y == -1) {
+      
+      std::cout << runningStack[t]<<std::endl;
+      t--;
+    } else {
+      std::cout << saved_string[thisCode.y]<<std::endl;
+    }
   } else if (thisCode.op == "F1U") {
   } else if (thisCode.op == "F2U") {
+  } else if (thisCode.op == "INC") {
+    t = t + thisCode.y;
   }
 }
 
-int Grammar::base(int levelGap, int b) {}
+int Grammar::base(int levelGap, int b) {
+  int b1 = b;
+  while (levelGap >0) {
+    b1 = runningStack[b1];
+    levelGap --;
+  }
+  return b1;
+}
 }  // namespace compiler
 
 int main(int argc, char *argv[]) {
   compiler::Grammar grammar;
   grammar.init(std::string(argv[1]));
   grammar.program();
+  grammar.runCodes();
 }

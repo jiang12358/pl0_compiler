@@ -22,6 +22,7 @@ class Lex {
   double double_num;
   char char_value;
 
+  std::string last_string;
  private:
   Scanner scanner;
   char c;

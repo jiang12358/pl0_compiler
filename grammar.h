@@ -12,7 +12,7 @@ class Grammar {
 
   void program();
 
-  void block(int level);
+  void block(int level, bool iffunction);
   void const_declare(int level);
   void var_declare(int level);
   void var_define(int level);
@@ -22,7 +22,7 @@ class Grammar {
 
   void parameter_handle(int level);
 
-  void format_parameter(int level);
+  int format_parameter(int level);
 
   void one_parameter(int level);
 
@@ -59,6 +59,7 @@ class Grammar {
   void emit(std::string op);
   void emit(std::string op, int y);
   void emit(std::string op, int x, int y);
+  void emit(std::string op, int x, std::string write_string);
 
   void printCode();
 

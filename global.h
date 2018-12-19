@@ -56,7 +56,8 @@ enum SymType {
   kFor = 45,
   kString = 46,
   kCharacter = 47,
-  kRealNum = 48
+  kRealNum = 48,
+  kVarParam = 49
 };
 
 static std::map<SymType, std::string> SymbolDict{
@@ -168,6 +169,7 @@ typedef struct {
   SymType kind;
   int address;
   bool ifArray;
+  int params_num;
   int num;
   double real;
   char c;
@@ -175,6 +177,7 @@ typedef struct {
 
 static std::vector<int> runningStack(1000, 0);
 
+static std::vector<std::string> saved_string;
 typedef struct {
   std::string op;
   int x;

@@ -110,8 +110,11 @@ SymType Lex::getsym() {
       // std::endl;
     }
   } else if (c == '\"') {
+    last_string = "";
+    //last_string = last_string + c;
     scanner.GetNextChar(c);
     while ((c == 32) || (c == 33) || ((c >= 35) && (c <= 126))) {
+      last_string = last_string + c;
       scanner.GetNextChar(c);
     }
     if (c == '\"') {
