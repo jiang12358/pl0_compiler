@@ -14,6 +14,8 @@ class Lex {
 
   void Run();
 
+  std::string GetThisLine();
+
   SymType sym;
 
   std::string last_id;

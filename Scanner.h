@@ -11,6 +11,7 @@ class Scanner {
     InFile = filename;
     Code = "";
     ThisChar = 0;
+	ThisLine = 0;
   };
   void ScanFile();
 
@@ -18,12 +19,16 @@ class Scanner {
 
   bool GetNextChar(char &c);
 
+  std::string GetThisLine();
+
  private:
   std::string InFile;
   std::string Code;
   std::queue<std::string> CodeQueue;
   std::queue<char> CodeLine;
+  std::vector<std::string> codestrings;
   int ThisChar;
+  int ThisLine;
 };
 }  // namespace compiler
 #endif

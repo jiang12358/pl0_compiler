@@ -24,7 +24,7 @@ class Grammar {
 
   int format_parameter(int level);
 
-  void one_parameter(int level);
+  int one_parameter(int level);
 
   void array_declare(int level, std::vector<std::string> &tempStrings);
 
@@ -67,6 +67,8 @@ class Grammar {
   void runSingleCode();
 
   int base(int levelGap, int b);
+
+  void error();
 
  private:
   Lex lex;

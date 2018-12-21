@@ -157,11 +157,11 @@ static std::map<std::string, SymType> WordSymbol{{"const", kConst},
                                                  {"procedure", kProcedure}};
 
 // SymType sym;
-
+/*
 static void error() {
   std::cout << "ERROR" << std::endl;
   std::exit(0);
-}
+}*/
 
 typedef struct {
   std::string name;

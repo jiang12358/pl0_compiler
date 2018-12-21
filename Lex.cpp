@@ -16,12 +16,15 @@ void Lex::Run() {
   }
 }
 
+std::string Lex::GetThisLine() {
+	return scanner.GetThisLine();
+}
 SymType Lex::getsym() {
   while (c == ' ') {
     scanner.GetNextChar(c);
   }
 
-  if ((c >= 'a') && (c <= 'z')) {  // check if the reserved word
+  if (((c >= 'a') && (c <= 'z'))|| ((c >= 'A') && (c <= 'Z'))) {  // check if the reserved word
     std::string tempString = "";
     while (((c >= 'a') && (c <= 'z')) || ((c >= '0') && (c <= '9')) ||
            ((c >= 'A') && (c <= 'Z'))) {
