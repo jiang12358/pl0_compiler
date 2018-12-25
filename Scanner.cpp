@@ -52,6 +52,9 @@ c = codestrings[ThisLine][ThisChar];
 }
 
 std::string Scanner::GetThisLine() {
+	if (ThisChar == 0) {
+		return codestrings[ThisLine - 1];
+	}
 	return codestrings[ThisLine];
 }
 }  // namespace compiler

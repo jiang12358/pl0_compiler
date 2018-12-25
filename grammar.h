@@ -13,20 +13,20 @@ class Grammar {
   void program();
 
   void block(int level, bool iffunction);
-  void const_declare(int level);
-  void var_declare(int level);
-  void var_define(int level);
+  void const_declare(int &dx, int level);
+  void var_declare(int &dx, int level);
+  void var_define(int &dx, int level);
 
-  void procedure_declare(int level);
-  void function_declare(int level);
+  void procedure_declare(int &dx, int level);
+  void function_declare(int &dx, int level);
 
-  void parameter_handle(int level);
+  void parameter_handle(int level,int pos);
 
-  int format_parameter(int level);
+  int format_parameter(int &dx, int level, int procedure_flag);
 
-  int one_parameter(int level);
+  int one_parameter(int &dx, int level, int procedure_flag);
 
-  void array_declare(int level, std::vector<std::string> &tempStrings);
+  void array_declare(int &dx, int level, std::vector<std::string> &tempStrings);
 
   void statement(int level);
   void multistatement(int level);
@@ -37,18 +37,20 @@ class Grammar {
   void readstatement(int level);
   void becomestatement(int level);
 
-  void const_(int level);
+  void const_(int &dx, int level);
 
   void condition(int level);
   void expression(int level);
   void item(int level);
   void factor(int level);
 
-  void enter(int level, std::string name, SymType kind, int size);
-  void enter(int level, std::string name, SymType kind, int size, bool ifMinus);
-  void enter(int level, std::string name, SymType kind, int size, int value);
-  void enter(int level, std::string name, SymType kind, int size, double value);
-  void enter(int level, std::string name, SymType kind, int size, char value);
+  void load_var_address(int level);
+
+  void enter(int &dx, int level, std::string name, SymType kind, int size);
+  void enter(int &dx, int level, std::string name, SymType kind, int size, bool ifMinus);
+  void enter(int &dx, int level, std::string name, SymType kind, int size, int value);
+  void enter(int &dx, int level, std::string name, SymType kind, int size, double value);
+  void enter(int &dx, int level, std::string name, SymType kind, int size, char value);
 
   void clearTable(int level);
 
@@ -79,10 +81,12 @@ class Grammar {
   int pc = 0;
   int t = 0;
   int b = 1;
-  int dx = 0;
+  double fun_value;
   std::map<int, int> level_last_adr;
   std::string output_file;
   std::vector<code> codes;
+
+  bool DEBUG = false;
 
  public:
 };

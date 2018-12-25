@@ -167,21 +167,24 @@ typedef struct {
   std::string name;
   int level;
   SymType kind;
+  SymType type;
   int address;
   bool ifArray;
+  bool ifVarParam;
   int params_num;
   int num;
   double real;
   char c;
+  std::vector<bool> params_if_var;
 } table;
 
-static std::vector<int> runningStack(1000, 0);
+static std::vector<double> runningStack(1000, 0);
 
 static std::vector<std::string> saved_string;
 typedef struct {
   std::string op;
   int x;
-  int y;
+  double y;
 } code;
 }  // namespace compiler
 #endif

@@ -11,12 +11,13 @@ void Grammar::init(std::string filename) {
   tab_size = 0;
   last_address = 0;
   max_level = 0;
+  fun_value = 0;
 }
 
 void Grammar::program() {
   block(0, false);
   if (lex.sym == kDot) {
-    emit("OPR", 0, 0);
+    //emit("OPR", 0, 0);
     std::cout << "This is a program" << std::endl;
   }
   printTable();
@@ -24,7 +25,9 @@ void Grammar::program() {
 }
 
 void Grammar::block(int level, bool iffunction) {
-  dx = 3;
+	std::string fun_name = lex.last_id;
+
+  int dx = 3;
   int tx0 = tables.size() - 1;
   int cx0 = codes.size() - 1;
   
@@ -34,9 +37,10 @@ void Grammar::block(int level, bool iffunction) {
   int procedure_flag = tables.size() - 1;
   int params_num = 0;
   if (lex.sym == kLBracket) {
+	  
 	  lex.getsym();
 	  if (lex.sym != kRBracket) {
-		  params_num = format_parameter(level);
+		  params_num = format_parameter(dx, level, procedure_flag);
 	  }
 	  tables[procedure_flag].params_num = params_num;
 	  // std::cout << lex.sym << std::endl;
@@ -57,10 +61,12 @@ void Grammar::block(int level, bool iffunction) {
 			  for (int i = params_num; i > 0; i--) {
 				  if (tables[tables.size() - i].kind == kVarParam) {
 					  //load address
-
+					  emit("RADR", 0, tables.size() -i);
+					  std::cout << "PPPPPPPPPPPPPPPPPPPPPPPPPPPPPP" << tables[tables.size() - i].name<<std::endl;
 				  }
 				  else {
 					  //load value
+					  std::cout << "QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ" << std::endl;
 					  emit("STO", 0, tables[tables.size() - i].address);
 				  }
 			  }
@@ -79,13 +85,13 @@ void Grammar::block(int level, bool iffunction) {
   lex.getsym();
   if (lex.sym == kConst) {
     lex.getsym();
-    const_declare(level);
+    const_declare(dx, level);
   }
 
   while (lex.sym == kComma) {
     lex.getsym();
     if (lex.sym == kIdent) {
-      const_declare(level);
+      const_declare(dx, level);
     } else {
       break;
     }
@@ -97,16 +103,16 @@ void Grammar::block(int level, bool iffunction) {
 
   if (lex.sym == kVar) {
     lex.getsym();
-    var_declare(level);
+    var_declare(dx, level);
   }
   
   while (lex.sym == kFunction || lex.sym == kProcedure) {
     if (lex.sym == kFunction) {
       lex.getsym();
-      function_declare(level);
+      function_declare(dx, level);
     } else {
       lex.getsym();
-      procedure_declare(level);
+      procedure_declare(dx, level);
     }
 	if (lex.sym == kSemiColon) {
 		lex.getsym();
@@ -125,50 +131,50 @@ void Grammar::block(int level, bool iffunction) {
   std::cout << "this is a block" << std::endl;
 }
 
-void Grammar::const_declare(int level) {
+void Grammar::const_declare(int &dx, int level) {
   if (lex.sym == kIdent) {
     lex.getsym();
     if (lex.sym == kEqual) {
       lex.getsym();
-      const_(level);
+      const_(dx, level);
     }
   }
   std::cout << "This is a const declaration" << std::endl;
 }
 
-void Grammar::const_(int level) {
+void Grammar::const_(int &dx, int level) {
   if (lex.sym == kPlus || lex.sym == kMinus) {
     bool ifMinus = lex.sym == kMinus;
     lex.getsym();
     if (lex.sym == kRealNum || lex.sym == kNumber) {
       SymType tempSym = lex.sym;
       lex.getsym();
-      enter(level, lex.last_id, tempSym, 1, ifMinus);
+      enter(dx, level, lex.last_id, tempSym, 1, ifMinus);
       std::cout << "This is a const" << std::endl;
     }
   } else if (lex.sym == kRealNum || lex.sym == kNumber) {
     SymType tempSym = lex.sym;
     lex.getsym();
-    enter(level, lex.last_id, tempSym, 1);
+    enter(dx, level, lex.last_id, tempSym, 1);
     std::cout << "This is a const" << std::endl;
   } else if (lex.sym == kCharacter) {
     SymType tempSym = lex.sym;
     lex.getsym();
-    enter(level, lex.last_id, tempSym, 1);
+    enter(dx, level, lex.last_id, tempSym, 1);
     std::cout << "This is a const" << std::endl;
   }
 }
 
-void Grammar::var_declare(int level) {
-  var_define(level);
+void Grammar::var_declare(int &dx, int level) {
+  var_define(dx, level);
   while (lex.sym == kSemiColon) {
     lex.getsym();
-    var_define(level);
+    var_define(dx, level);
   }
   std::cout << "This is a variable declaration" << std::endl;
 }
 
-void Grammar::var_define(int level) {
+void Grammar::var_define(int &dx, int level) {
   std::vector<std::string> tempStrings;
   if (lex.sym == kIdent) {
     tempStrings.push_back(lex.last_id);
@@ -185,21 +191,25 @@ void Grammar::var_define(int level) {
       lex.getsym();
       if (lex.sym == kInteger || lex.sym == kReal || lex.sym == kChar) {
         for (auto id : tempStrings) {
-          enter(level, id, kVar, 1);
+          enter(dx, level, id, kVar, 1);
+		  tables[tables.size() - 1].type = lex.sym;
         }
         lex.getsym();
       } else if (lex.sym == kArray) {
         lex.getsym();
-        array_declare(level, tempStrings);
+        array_declare(dx, level, tempStrings);
       } else {
         error();
       }
     }
-    std::cout << "This is a variable defination" << std::endl;
+
+std::cout << "This is a variable defination" << std::endl;
+	
+    
   }
 }
 
-void Grammar::array_declare(int level, std::vector<std::string> &tempStrings) {
+void Grammar::array_declare(int &dx, int level, std::vector<std::string> &tempStrings) {
   if (lex.sym == kLSquareBracket) {
     lex.getsym();
     if (lex.sym == kNumber) {
@@ -210,7 +220,8 @@ void Grammar::array_declare(int level, std::vector<std::string> &tempStrings) {
           lex.getsym();
           if (lex.sym == kInteger || lex.sym == kReal || lex.sym == kChar) {
             for (auto id : tempStrings) {
-              enter(level, id, kVar, lex.last_num);
+              enter(dx, level, id, kVar, lex.last_num);
+			  tables[tables.size() - 1].type = lex.sym;
             }
             lex.getsym();
             std::cout << "This is an array defination" << std::endl;
@@ -221,12 +232,12 @@ void Grammar::array_declare(int level, std::vector<std::string> &tempStrings) {
   }
 }
 
-void Grammar::function_declare(int level) {
+void Grammar::function_declare(int &dx, int level) {
   std::string function_name;
   if (lex.sym == kIdent) {
     clearTable(level + 1);
     function_name = lex.last_id;
-    enter(level, function_name, kFunction, 0);
+    enter(dx, level, function_name, kFunction, 0);
 
 	int params_num = 0;
 	int function_flag = tables.size() - 1;
@@ -250,6 +261,7 @@ void Grammar::function_declare(int level) {
               int i = position(function_name, 0, 0);
               tables[i].address = codes.size();*/
               block(level + 1, true);
+			  clearTable(level + 1);
 			  std::cout << "This is a function declaration" << std::endl;
               /*if (lex.sym == kSemiColon) {
                 lex.getsym();
@@ -263,12 +275,12 @@ void Grammar::function_declare(int level) {
   }
 }
 
-void Grammar::procedure_declare(int level) {
+void Grammar::procedure_declare(int &dx, int level) {
   std::string procedure_name;
   if (lex.sym == kIdent) {
     clearTable(level + 1);
     procedure_name = lex.last_id;
-    enter(level, procedure_name, kProcedure, 0);
+    enter(dx, level, procedure_name, kProcedure, 0);
 
 	int params_num = 0;
 	int procedure_flag = tables.size() - 1;
@@ -278,6 +290,7 @@ void Grammar::procedure_declare(int level) {
     if (lex.sym == kLBracket) {
 
           block(level + 1, false);
+		  clearTable(level + 1);
           // std::cout << lex.sym << std::endl;
           if (lex.sym == kSemiColon) {
             lex.getsym();
@@ -289,18 +302,18 @@ void Grammar::procedure_declare(int level) {
   }
 }
 
-int Grammar::format_parameter(int level) {
+int Grammar::format_parameter(int &dx, int level, int procedure_flag) {
 	int params_num = 0;
-	params_num+=one_parameter(level);
+	params_num+=one_parameter(dx, level, procedure_flag);
   while (lex.sym == kSemiColon) {
     lex.getsym();
-	params_num += one_parameter(level);
+	params_num += one_parameter(dx, level, procedure_flag);
   }
   std::cout << "This is a format parameter" << std::endl;
   return params_num;
 }
 
-int Grammar::one_parameter(int level) {
+int Grammar::one_parameter(int &dx, int level, int procedure_flag) {
 	int params_num = 0;
 	bool ifvar = false;
 	std::vector<std::string> temp_strings;
@@ -310,24 +323,24 @@ int Grammar::one_parameter(int level) {
   }
   if (lex.sym == kIdent) {
 	  params_num++;
-	  if (ifvar) {
-	     enter(level, lex.last_id, kVarParam, 1);
+	  /*if (ifvar) {
+	     enter(dx, level, lex.last_id, kVarParam, 1);
 	  }
-	  else {
+	  else {*/
 		  temp_strings.emplace_back(lex.last_id);
-	  }
+//	  }
     
     lex.getsym();
     while (lex.sym == kComma) {
       lex.getsym();
       if (lex.sym == kIdent) {
 		  params_num++;
-		  if (ifvar) {
-			  enter(level, lex.last_id, kVarParam, 1);
+		  /*if (ifvar) {
+			  enter(dx, level, lex.last_id, kVarParam, 1);
 		  }
-		  else {
+		  else {*/
 			  temp_strings.emplace_back(lex.last_id);
-		  }
+		  //}
         lex.getsym();
       } else {
         error();
@@ -336,13 +349,23 @@ int Grammar::one_parameter(int level) {
     if (lex.sym == kColon) {
       lex.getsym();
       if (lex.sym == kInteger || lex.sym == kReal || lex.sym == kChar) {
+		  SymType thisType = lex.sym;
         lex.getsym();
         std::cout << "This is a parameter" << std::endl;
-		if (!ifvar) {
+		
 			for (auto temp_string : temp_strings) {
-				enter(level, temp_string, kVar, 1);
+				if (ifvar) {
+					enter(dx, level, temp_string, kVarParam, 1);
+				}
+				else {
+					enter(dx, level, temp_string, kVar, 1);
+				}
+				
+				tables[procedure_flag].params_if_var.emplace_back(ifvar);
+				tables[tables.size() - 1].ifVarParam = ifvar;
+				tables[tables.size() - 1].type = thisType;
 			}
-		}
+		
       }
     }
   }
@@ -380,17 +403,21 @@ void Grammar::statement(int level) {
 		std::string procedure_name = lex.last_id;
 		int i = position(procedure_name, level, 0);
       lex.getsym();
-
+	  
       if (lex.sym == kLBracket) {
+        emit("CAL", level - tables[i].level, tables[i].address);
+	    int cal_flag = codes.size() -1;
         lex.getsym();
         if (lex.sym != kRBracket) {
-          parameter_handle(level);
-		  emit("JMP", level - tables[i].level, tables[i].address);
+          parameter_handle(level - tables[i].level + 1, i);
+		  
         }
         if (lex.sym != kRBracket) {
-          error();
+          error(); 
         } else {
-          lex.getsym();
+			emit("JMP", level - tables[i].level, tables[i].address);
+			codes[cal_flag].y = codes.size();
+           lex.getsym();
           std::cout << "This is a procedure call" << std::endl;
         }
       } else {
@@ -458,9 +485,21 @@ void Grammar::forstatement(int level) {
     }
 
     expression(level);
-    emit("STO", level - tables[i].level, tables[i].address);
+	if (tables[i].kind == kVarParam) {
+		emit("STOABS", level - tables[i].level, i);
+	}
+	else {
+		emit("STO", level - tables[i].level, tables[i].address);
+	}
+    
 int for_start_mark = codes.size();
-	emit("LOD", level - tables[i].level, tables[i].address);
+if (tables[i].kind == kVarParam) {
+	emit("LODABS", level - tables[i].level, i);
+}
+else {
+emit("LOD", level - tables[i].level, tables[i].address);
+}
+	
     if (lex.sym == kTo ) {
       lex.getsym();
       
@@ -473,10 +512,20 @@ int for_start_mark = codes.size();
         begin = codes.size();
         lex.getsym();
         statement(level);
-		emit("LOD", level - tables[i].level, tables[i].address);
+		if (tables[i].kind == kVarParam) {
+			emit("LODABS", level - tables[i].level, i);
+		}
+		else {
+			emit("LOD", level - tables[i].level, tables[i].address);
+		}
 		emit("LIT", 0, 1);
 		emit("OPR", 0, 2);
-		emit("STO", level - tables[i].level, tables[i].address);
+		if (tables[i].kind == kVarParam) {
+			emit("STOABS", level - tables[i].level, i);
+		}
+		else {
+			emit("STO", level - tables[i].level, tables[i].address);
+		}
 		emit("JMP", 0, for_start_mark);
 		codes[for_end_flag].y = codes.size();
       } else {
@@ -492,10 +541,20 @@ int for_start_mark = codes.size();
 			begin = codes.size();
 			lex.getsym();
 			statement(level);
-			emit("LOD", level - tables[i].level, tables[i].address);
+			if (tables[i].kind == kVarParam) {
+				emit("LODABS", level - tables[i].level, i);
+			}
+			else {
+				emit("LOD", level - tables[i].level, tables[i].address);
+			}
 			emit("LIT", 0, 1);
 			emit("OPR", 0, 3);
-			emit("STO", level - tables[i].level, tables[i].address);
+			if (tables[i].kind == kVarParam) {
+				emit("STOABS", level - tables[i].level, i);
+			}
+			else {
+				emit("STO", level - tables[i].level, tables[i].address);
+			}
 			emit("JMP", 0, for_start_mark);
 			codes[for_end_flag].y = codes.size();
 		}
@@ -556,8 +615,14 @@ void Grammar::readstatement(int level) {
     lex.getsym();
     if (lex.sym == kIdent) {
       emit("RED", 0, 0);
-      emit("STO", level - tables[position(lex.last_id, 0, 0)].level,
-           tables[position(lex.last_id, 0, 0)].address);
+	  if (tables[position(lex.last_id, 0, 0)].kind == kVarParam) {
+		  emit("STOABS", level - tables[position(lex.last_id, 0, 0)].level,
+			  position(lex.last_id, 0, 0));
+	  }
+	  else {
+		  emit("STO", level - tables[position(lex.last_id, 0, 0)].level,
+			  tables[position(lex.last_id, 0, 0)].address);
+	  }
       lex.getsym();
       while (lex.sym == kComma) {
         lex.getsym();
@@ -565,8 +630,14 @@ void Grammar::readstatement(int level) {
           error();
         }
         emit("RED", 0, 0);
-        emit("STO", level - tables[position(lex.last_id, 0, 0)].level,
-             tables[position(lex.last_id, 0, 0)].address);
+		if (tables[position(lex.last_id, 0, 0)].kind == kVarParam) {
+			emit("STOABS", level - tables[position(lex.last_id, 0, 0)].level,
+				position(lex.last_id, 0, 0));
+		}
+		else {
+			emit("STO", level - tables[position(lex.last_id, 0, 0)].level,
+				tables[position(lex.last_id, 0, 0)].address);
+		}
         lex.getsym();
       }
 
@@ -585,6 +656,13 @@ void Grammar::readstatement(int level) {
 
 void Grammar::becomestatement(int level) {
   int i = position(lex.last_id, level, 0);
+  if (tables[i].kind == kFunction) {
+	  if (lex.sym == kBecome) {
+		  lex.getsym();
+		  expression(level);
+		  emit("STO", level - tables[i].level, -1);
+	  }
+  } else 
   if (lex.sym == kLSquareBracket) {
     lex.getsym();
     expression(level);
@@ -592,13 +670,23 @@ void Grammar::becomestatement(int level) {
       error();
     } else {
       lex.getsym();
+	  //emit("LOA", level - tables[i].level, tables[i].address);
     }
-  }
-
-  if (lex.sym == kBecome) {
+	if (lex.sym == kBecome) {
+		lex.getsym();
+		expression(level);
+		emit("STA", level - tables[i].level, tables[i].address);
+		std::cout << "TABLESINDEX"<<i<<"@@@@@@@@@@@@@@@@@@@@@@@@@"<<tables[i].name<<tables[i].address;
+	}
+  } else if (lex.sym == kBecome) {
     lex.getsym();
     expression(level);
-    emit("STO", level - tables[i].level, tables[i].address);
+	if (tables[i].kind == kVarParam) {
+		emit("STOABS", level - tables[i].level, i);
+	}
+	else {
+		emit("STO", level - tables[i].level, tables[i].address);
+	}
   }
 
   std::cout << "This is a become statement" << std::endl;
@@ -645,6 +733,27 @@ void Grammar::item(int level) {
   std::cout << "This is an item" << std::endl;
 }
 
+void Grammar::load_var_address(int level) {
+	std::cout << "LLLLLLLLLOOOOOOOOOOOOAAAAAAAAAADDDDDDDDDDDD" << std::endl;
+	if (lex.sym == kIdent) {
+		int i = position(lex.last_id, 0, 0);
+		lex.getsym();
+		if (lex.sym == kLSquareBracket) {
+			lex.getsym();
+			expression(level);
+			emit("ADRA", level - tables[i].level, tables[i].address);
+				if (lex.sym != kRSquareBracket) {
+					error();
+				}
+				else {
+					lex.getsym();
+				}
+		}
+		else {
+			emit("ADR", level - tables[i].level, tables[i].address);
+		}
+	}
+}
 void Grammar::factor(int level) {
 	std::cout << lex.sym << std::endl;
   if (lex.sym == kIdent) {
@@ -654,6 +763,7 @@ void Grammar::factor(int level) {
     if (lex.sym == kLSquareBracket) {
       lex.getsym();
       expression(level);
+	  emit("LOA", level - tables[i].level, tables[i].address);
       if (lex.sym != kRSquareBracket) {
         error();
       } else {
@@ -661,7 +771,7 @@ void Grammar::factor(int level) {
 		std::cout << lex.sym << std::endl;
       }
     } else if (lex.sym == kLBracket) {
-      lex.getsym();
+      /*lex.getsym();
       if (lex.sym != kRBracket) {
         parameter_handle(level);
       }
@@ -670,9 +780,30 @@ void Grammar::factor(int level) {
       } else {
         lex.getsym();
         std::cout << "This is a function call" << std::endl;
-      }
+      }*/
+
+	  emit("CAL", level - tables[i].level, tables[i].address);
+	  int cal_flag = codes.size() - 1;
+	  lex.getsym();
+	  if (lex.sym != kRBracket) {
+		  parameter_handle(level - tables[i].level + 1, i);
+
+	  }
+	  if (lex.sym != kRBracket) {
+		  error();
+	  }
+	  else {
+		  emit("JMP", level - tables[i].level, tables[i].address);
+		  codes[cal_flag].y = codes.size();
+		  emit("LOD", 0, -1);
+		  lex.getsym();
+		  std::cout << "This is a function call" << std::endl;
+	  }
     } else {
-      if (tables[i].kind == kVar) {
+		if (tables[i].kind == kVarParam) {
+			emit("LODABS", level - tables[i].level, i);
+		}
+		else if (tables[i].kind == kVar) {
         emit("LOD", level - tables[i].level, tables[i].address);
       } else {
         emit("LIT", 0, tables[i].num);
@@ -689,7 +820,7 @@ void Grammar::factor(int level) {
     lex.getsym();
     std::cout << "This is a number" << std::endl;
   } else if (lex.sym == kRealNum) {
-    emit("LIT", 0, lex.last_num);
+    emit("LIT", 0, lex.double_num);
     // if (lex.last_num > 100) {
     std::cout << lex.last_num << std::endl;
     //}
@@ -707,14 +838,36 @@ void Grammar::factor(int level) {
   std::cout << "This is a factor" << std::endl;
 }
 
-void Grammar::parameter_handle(int level) {
+void Grammar::parameter_handle(int level, int pos) {
+
+	for (auto var_flag: tables[pos].params_if_var) {
+		std::cout << "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFIIIIIIIIIIIIIIIIIIIRRRRRRRRRRRRRRRRRRRRR" << std::endl;
+		if (var_flag) {
+			std::cout << "SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS" << std::endl;
+			load_var_address(level);
+		}
+		else {
+			std::cout << "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT" << std::endl;
+			expression(level);
+		}
+		if (lex.sym != kComma) {
+			if (lex.sym == kRBracket) {
+				break;
+			}
+			else { error(); }
+		}
+		else {
+			lex.getsym();
+		}
+	}
+	/*
   if (lex.sym != kRBracket) {
     expression(level);
     while (lex.sym == kComma) {
       lex.getsym();
       expression(level);
     }
-  }
+  }*/
   std::cout << "This is a parameter expression" << std::endl;
 }
 
@@ -749,7 +902,8 @@ void Grammar::condition(int level) {
   }
 }
 
-void Grammar::enter(int level, std::string name, SymType kind, int size) {
+void Grammar::enter(int &dx, int level, std::string name, SymType kind, int size) {
+	std::cout << "DXXXXX  " << dx << std::endl;
   table temp = table();
   temp.name = name;
 
@@ -763,7 +917,7 @@ void Grammar::enter(int level, std::string name, SymType kind, int size) {
       temp.level = level;
 	}
 	else if (kind == kVarParam) {
-		
+		temp.level = level;
 	}
 	else if (kind == kChar) {
       temp.c = lex.char_value;
@@ -790,7 +944,7 @@ void Grammar::enter(int level, std::string name, SymType kind, int size) {
   tables.push_back(temp);
 }
 
-void Grammar::enter(int level, std::string name, SymType kind, int size,
+void Grammar::enter(int &dx, int level, std::string name, SymType kind, int size,
                     bool ifMinus) {
   table temp = table();
   temp.name = name;
@@ -813,7 +967,7 @@ void Grammar::enter(int level, std::string name, SymType kind, int size,
   tables.push_back(temp);
 }
 
-void Grammar::enter(int level, std::string name, SymType kind, int size,
+void Grammar::enter(int &dx, int level, std::string name, SymType kind, int size,
                     int number) {
   table temp = table();
   temp.name = name;
@@ -825,7 +979,7 @@ void Grammar::enter(int level, std::string name, SymType kind, int size,
   tables.push_back(temp);
 }
 
-void Grammar::enter(int level, std::string name, SymType kind, int size,
+void Grammar::enter(int &dx, int level, std::string name, SymType kind, int size,
                     double real) {
   table temp = table();
   temp.name = name;
@@ -837,7 +991,7 @@ void Grammar::enter(int level, std::string name, SymType kind, int size,
   tables.push_back(temp);
 }
 
-void Grammar::enter(int level, std::string name, SymType kind, int size,
+void Grammar::enter(int &dx, int level, std::string name, SymType kind, int size,
                     char c) {
   table temp = table();
   temp.name = name;
@@ -932,8 +1086,12 @@ void Grammar::runCodes() {
   runningStack[2] = 0;
   runningStack[3] = 0;
   do {
+	  if (DEBUG) {
+		  std::cout << "  PC:" << pc << "runningStack   " << runningStack[t] << std::endl;
+	  }
+	  //
     runSingleCode();
-  } while (pc != 0);
+  } while (pc != 0 && pc!=codes.size() - 1);
 }
 
 void Grammar::runSingleCode() {
@@ -942,8 +1100,12 @@ void Grammar::runSingleCode() {
   if (thisCode.op == "OPR") {
     if (thisCode.y == 0) {
       t = b - 1;
+	  
       pc = runningStack[t + 3];
       b = runningStack[t + 2];
+	  if (DEBUG) {
+		  std::cout << "THIS IS OPR00  PC:" << pc << "   B:" << b << "  T:" << t << std::endl;
+	  }
     } else if (thisCode.y == 1) {
       runningStack[t] = -runningStack[t];
     } else if (thisCode.y == 2) {
@@ -988,12 +1150,24 @@ void Grammar::runSingleCode() {
   } else if (thisCode.op == "JEZ") {
 	  if (runningStack[t] == 0) {
 		  pc = thisCode.y;
+		  
 	}
 	  t--;
   } else if (thisCode.op == "LOD") {
-    t++;
-    runningStack[t] = runningStack[base(thisCode.x, b) + thisCode.y];
-  } else if (thisCode.op == "LIT") {
+	  t++;
+	  if (thisCode.y == -1) {
+		  runningStack[t] = fun_value;
+	  }
+	  else {
+          runningStack[t] = runningStack[base(thisCode.x, b) + thisCode.y];
+	  }
+    
+  }
+  else if (thisCode.op == "LODABS") {
+	  t++;
+	  runningStack[t] = runningStack[tables[thisCode.y].address];
+  }
+  else if (thisCode.op == "LIT") {
     t++;
     runningStack[t] = thisCode.y;
   } else if (thisCode.op == "RED") {
@@ -1002,9 +1176,20 @@ void Grammar::runSingleCode() {
     scanf_s("%d", &a);
     runningStack[t] = a;
   } else if (thisCode.op == "STO") {
-    runningStack[base(thisCode.x, b) + thisCode.y] = runningStack[t];
+	  if (thisCode.y == -1) {
+		  fun_value = runningStack[t];
+	  }
+	  else {
+        runningStack[base(thisCode.x, b) + thisCode.y] = runningStack[t];
+		
+	  }
+    
     t--;
-  } else if (thisCode.op == "WRT") {
+  }
+  else if (thisCode.op == "STOABS") {
+	  runningStack[tables[thisCode.y].address] = runningStack[t];
+	  t--;
+  }if (thisCode.op == "WRT") {
     if (thisCode.y == -1) {
       
       std::cout << runningStack[t]<<std::endl;
@@ -1012,7 +1197,51 @@ void Grammar::runSingleCode() {
     } else {
       std::cout << saved_string[thisCode.y]<<std::endl;
     }
-  } else if (thisCode.op == "F1U") {
+  }
+  else if (thisCode.op == "STA") {
+	  double value = runningStack[t];
+	  t--;
+	  int offset = runningStack[t];
+	  t--;
+	  runningStack[base(thisCode.x, b) + thisCode.y + offset] = value;
+	  if (DEBUG) {
+		  std::cout << "THIS IS ARRAY BECOME" << base(thisCode.x, b) + thisCode.y + offset << "offset" << offset << "array addr:" << thisCode.y << std::endl;
+	  }
+  }
+  else if (thisCode.op == "LOA") {
+	  int offset = runningStack[t];
+	  runningStack[t] = runningStack[base(thisCode.x, b) + thisCode.y + offset];
+	  
+  }
+  else if (thisCode.op == "CAL") {
+	  runningStack[t + 1] = base(thisCode.x, b);
+	  runningStack[t + 2] = b;
+	  runningStack[t + 3] = thisCode.y;
+	  if (DEBUG) {
+		  std::cout << "pc value:" << runningStack[t + 1] << "t value:" << t + 3 << "b value:" << b << std::endl;
+	  }
+	  b = t + 1;
+	  t = t + 3;
+
+  }
+  else if (thisCode.op == "ADR") {
+  t++;
+  runningStack[t] = base(thisCode.x, b) + thisCode.y;
+  std::cout << base(thisCode.x, b) << "  " << b << std::endl;
+  }
+  else if (thisCode.op == "ADRA") {
+  int offset = runningStack[t];
+  runningStack[t] = base(thisCode.x, b) + thisCode.y + offset;
+  if (DEBUG) {
+	  std::cout << "OFFSET   " << offset << "BASE   "<<base(thisCode.x, b) << "b:"<<b<< std::endl;
+  }
+  }
+  else if (thisCode.op == "RADR") {
+  tables[thisCode.y].address = runningStack[t];
+  std::cout << "RADR" << runningStack[t] << std::endl;
+  t--;
+  }
+  else if (thisCode.op == "F1U") {
   } else if (thisCode.op == "F2U") {
   } else if (thisCode.op == "INC") {
     t = t + thisCode.y;
